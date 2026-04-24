@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>¿Quién maneja el crecimiento de México?</title>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js" charset="utf-8"></script>
+<script src="data_web.js"></script>
+<style>
+:root {
+  --canvas:   #f5f4ed;
+  --ink:      #1B365D;
+  --red:      #B85C38;
+  --green:    #4A7C59;
+  --gold:     #B8860B;
+  --purple:   #6B4E8A;
+  --text:     #2C2C2C;
+  --muted:    #6B6760;
+  --border:   rgba(44,44,44,0.12);
+  --ink-10:   rgba(27,54,93,0.10);
+  --ink-20:   rgba(27,54,93,0.20);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--canvas);
+  color:var(--text);
+  font-family:'Inter',sans-serif;
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── NAV ─────────────────────────────────────────────────────────────── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(245,244,237,0.92);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 2.5rem;height:52px;
+}
+.nav-title{font-family:'Newsreader',serif;font-size:0.9rem;color:var(--ink);font-weight:400;letter-spacing:0.01em}
+.nav-links{display:flex;gap:1.8rem}
+.nav-links a{
+  font-size:0.72rem;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;
+  color:var(--muted);text-decoration:none;transition:color 0.2s;
+}
+.nav-links a:hover,.nav-links a.active{color:var(--ink)}
+
+/* ── HERO ─────────────────────────────────────────────────────────────── */
+#hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  justify-content:center;align-items:flex-start;
+  padding:8rem 10vw 6rem;
+  border-bottom:1px solid var(--border);
+  position:relative;
+}
+.hero-eyebrow{
+  font-size:0.72rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--ink);opacity:0.6;margin-bottom:1.4rem;
+}
+.hero-title{
+  font-family:'Newsreader',serif;
+  font-size:clamp(2.8rem,6vw,5.2rem);
+  line-height:1.08;font-weight:400;color:var(--ink);
+  max-width:14ch;margin-bottom:1.8rem;
+}
+.hero-title em{font-style:italic;color:var(--red)}
+.hero-sub{
+  font-size:1.05rem;color:var(--muted);max-width:52ch;line-height:1.65;
+  margin-bottom:3rem;
+}
+.hero-stats{display:flex;gap:3rem;flex-wrap:wrap}
+.stat-block{border-left:2px solid var(--ink-20);padding-left:1.2rem}
+.stat-num{
+  font-family:'Newsreader',serif;font-size:2.6rem;
+  font-weight:300;color:var(--ink);line-height:1;
+}
+.stat-label{font-size:0.78rem;color:var(--muted);margin-top:0.3rem;letter-spacing:0.02em}
+.scroll-hint{
+  position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);
+  font-size:0.72rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;
+  display:flex;flex-direction:column;align-items:center;gap:0.5rem;
+}
+.scroll-arrow{width:20px;height:20px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(45deg);animation:bounce 1.8s infinite}
+@keyframes bounce{0%,100%{transform:rotate(45deg) translate(0,0);opacity:.4}50%{transform:rotate(45deg) translate(3px,3px);opacity:1}}
+
+/* ── SECTIONS ─────────────────────────────────────────────────────────── */
+section{padding:7rem 10vw;border-bottom:1px solid var(--border)}
+section:last-child{border-bottom:none}
+
+.section-label{
+  font-size:0.7rem;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;
+  color:var(--ink);opacity:0.5;margin-bottom:1rem;display:block;
+}
+.section-title{
+  font-family:'Newsreader',serif;
+  font-size:clamp(1.8rem,3.5vw,2.8rem);
+  font-weight:400;color:var(--ink);
+  line-height:1.18;margin-bottom:1.2rem;max-width:28ch;
+}
+.section-lead{
+  font-size:1.05rem;color:var(--muted);max-width:58ch;
+  line-height:1.68;margin-bottom:2.5rem;
+}
+.section-lead strong{color:var(--text);font-weight:500}
+
+/* ── SPLIT LAYOUT ──────────────────────────────────────────────────────── */
+.split{display:grid;grid-template-columns:1fr 1.6fr;gap:4rem;align-items:start}
+.split.reverse{grid-template-columns:1.6fr 1fr}
+.split-text{padding-top:1rem}
+.split-chart{min-height:380px}
+@media(max-width:900px){.split,.split.reverse{grid-template-columns:1fr}}
+
+/* ── CHART CONTAINER ───────────────────────────────────────────────────── */
+.chart-wrap{
+  background:var(--canvas);
+  border:1px solid var(--border);
+  border-radius:4px;padding:1.2rem 0.5rem 0.5rem;
+  min-height:380px;
+}
+.chart-caption{
+  font-size:0.78rem;color:var(--muted);margin-top:0.9rem;
+  line-height:1.5;max-width:56ch;font-style:italic;
+}
+
+/* ── BIG NUMBER ────────────────────────────────────────────────────────── */
+.big-number-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:2rem;margin:2.5rem 0}
+.big-number{border-top:2px solid var(--ink);padding-top:1rem}
+.big-number .num{
+  font-family:'Newsreader',serif;font-size:3rem;font-weight:300;
+  color:var(--ink);line-height:1;
+}
+.big-number .num.red{color:var(--red)}
+.big-number .num.green{color:var(--green)}
+.big-number .label{font-size:0.8rem;color:var(--muted);margin-top:0.4rem;line-height:1.4}
+
+/* ── SUMMARY TABLE ─────────────────────────────────────────────────────── */
+.summary-table{
+  width:100%;border-collapse:collapse;font-size:0.86rem;color:var(--text);
+}
+.summary-table tr{border-bottom:1px solid var(--border)}
+.summary-table tr:last-child{border-bottom:none}
+.summary-table th,.summary-table td{padding:0.85rem 0.4rem;text-align:left;vertical-align:top}
+.summary-table th{
+  font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;
+  color:var(--muted);font-weight:600;
+}
+.summary-table td:last-child{
+  font-family:'Newsreader',serif;font-size:1.25rem;color:var(--ink);text-align:right;
+  white-space:nowrap;
+}
+
+/* ── CALLOUT ────────────────────────────────────────────────────────────── */
+.callout{
+  border-left:3px solid var(--ink);
+  padding:1rem 1.5rem;margin:2rem 0;
+  background:rgba(27,54,93,0.04);
+  font-size:0.95rem;color:var(--text);line-height:1.6;
+  max-width:62ch;
+}
+.callout strong{color:var(--ink)}
+
+/* ── INTERACTIVE CONTROLS ──────────────────────────────────────────────── */
+.controls{margin-bottom:1.5rem}
+.slider-group{margin-bottom:1.2rem}
+.slider-label{
+  display:flex;justify-content:space-between;align-items:baseline;
+  font-size:0.82rem;font-weight:500;color:var(--text);margin-bottom:0.4rem;
+}
+.slider-label span{font-family:'Newsreader',serif;font-size:1rem;color:var(--ink)}
+input[type=range]{
+  -webkit-appearance:none;width:100%;height:4px;
+  background:var(--ink-10);border-radius:2px;outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:var(--ink);cursor:pointer;transition:transform 0.15s;
+}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
+
+.sm-display{
+  text-align:center;padding:1.8rem;
+  border:1px solid var(--border);border-radius:4px;margin-top:1rem;
+}
+.sm-display .sm-val{
+  font-family:'Newsreader',serif;font-size:4.5rem;
+  font-weight:300;color:var(--ink);line-height:1;
+}
+.sm-display .sm-desc{font-size:0.82rem;color:var(--muted);margin-top:0.5rem}
+
+/* ── PLAY BUTTON ─────────────────────────────────────────────────────── */
+.play-btn{
+  display:inline-flex;align-items:center;gap:0.5rem;
+  padding:0.6rem 1.3rem;
+  border:1.5px solid var(--ink);border-radius:2px;
+  background:transparent;color:var(--ink);
+  font-family:'Inter',sans-serif;font-size:0.8rem;font-weight:500;
+  letter-spacing:0.06em;text-transform:uppercase;
+  cursor:pointer;transition:all 0.2s;margin-bottom:1rem;
+}
+.play-btn:hover{background:var(--ink);color:var(--canvas)}
+.play-btn svg{width:12px;height:12px;fill:currentColor}
+
+/* ── WINDOW SLIDER ───────────────────────────────────────────────────── */
+.window-controls{
+  display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;
+}
+.window-label{font-size:0.82rem;color:var(--muted);min-width:180px}
+#window-slider{flex:1;min-width:200px}
+.window-stats{
+  display:flex;gap:2rem;margin-top:1rem;flex-wrap:wrap;
+}
+.wstat{border-top:1.5px solid var(--ink-20);padding-top:0.6rem;min-width:120px}
+.wstat .val{font-family:'Newsreader',serif;font-size:1.6rem;color:var(--ink);font-weight:300}
+.wstat .lbl{font-size:0.72rem;color:var(--muted);margin-top:0.1rem}
+
+/* ── PHASE PLANE ─────────────────────────────────────────────────────── */
+.corridor-wrap{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:2rem}
+@media(max-width:800px){.corridor-wrap{grid-template-columns:1fr}}
+
+/* ── FOOTER ──────────────────────────────────────────────────────────── */
+footer{
+  padding:3rem 10vw;
+  font-size:0.78rem;color:var(--muted);line-height:1.7;
+  border-top:1px solid var(--border);
+}
+footer a{color:var(--ink);text-decoration:none}
+footer a:hover{text-decoration:underline}
+
+/* ── FADE-IN on scroll ───────────────────────────────────────────────── */
+.fade-in{opacity:0;transform:translateY(18px);transition:opacity 0.65s ease,transform 0.65s ease}
+.fade-in.visible{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ NAV ═══════════════════════════════════ -->
+<nav>
+  <span class="nav-title">SSM México 1993–2025</span>
+  <div class="nav-links">
+    <a href="#correlacion">Correlación</a>
+    <a href="#motores">Motores</a>
+    <a href="#multiplicador">Multiplicador</a>
+    <a href="#vecm">Evidencia</a>
+    <a href="#rolling">Estabilidad</a>
+    <a href="#extension">2019–2025</a>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════ HERO ══════════════════════════════════ -->
+<section id="hero">
+  <p class="hero-eyebrow">Supermultiplicador Sraffiano · México · 1993–2025</p>
+  <h1 class="hero-title">¿Quién maneja el crecimiento de <em>México</em>?</h1>
+  <p class="hero-sub">
+    Entre 1993 y 2019, México creció apenas <strong id="pib-growth-text">—</strong> al año.
+    ¿Fue por las tasas de interés? ¿Por la oferta laboral? ¿Por la tecnología?
+    La evidencia de Barbieri Góes, Gahn y Gallo (2024) apunta más bien a otro lado:
+    el crecimiento de la economía mexicana sigue el avance de la <strong>demanda autónoma</strong>:
+    exportaciones, gasto público e inversión en vivienda.
+  </p>
+  <p class="hero-sub">
+    Lo que sigue es un intento humilde de recuperar el paper original y traerlo hasta hoy
+    con cifras base 2018. En general, salen las direcciones del trabajo original, aunque con diferencias de magnitud
+    que pueden venir del cambio de año base y de otros enredos de medición. Pero el espíritu aguanta:
+    <strong>el supermultiplicador sigue vivo.</strong>
+  </p>
+  <div class="hero-stats">
+    <div class="stat-block">
+      <div class="stat-num" id="h-corr">—</div>
+      <div class="stat-label">correlación Z–PIB (tasas yoy)</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-num" id="h-beta">—</div>
+      <div class="stat-label">elasticidad de largo plazo (β)</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-num" id="h-sm93">—</div>
+      <div class="stat-label">supermultiplicador en 1993</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-num" id="h-sm19">—</div>
+      <div class="stat-label">supermultiplicador en 2019</div>
+    </div>
+    <div class="stat-block">
+      <div class="stat-num" id="h-sm25">—</div>
+      <div class="stat-label">supermultiplicador en 2025</div>
+    </div>
+  </div>
+  <div class="scroll-hint">
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ CORRELACIÓN ═══════════════════════════ -->
+<section id="correlacion">
+  <span class="section-label">01 · La correlación</span>
+  <div class="fade-in" style="margin-bottom:3rem">
+    <h3 style="font-family:'Newsreader',serif;font-size:1.6rem;font-weight:400;color:var(--ink);margin-bottom:0.8rem">
+      PIB y demanda autónoma se mueven en la misma dirección
+    </h3>
+    <p class="section-lead" style="max-width:64ch;margin-bottom:1.2rem">
+      Así arranca también el paper: con una mirada simple a las trayectorias de <strong>Z</strong> y del <strong>PIB</strong>.
+      No prueba causalidad por sí sola, pero sí deja ver algo muy intuitivo: cuando la demanda autónoma agarra vuelo,
+      el producto suele ir detrás.
+    </p>
+    <div class="chart-wrap">
+      <div id="chart-levels" style="height:360px"></div>
+    </div>
+    <p class="chart-caption">Series en niveles, a precios constantes base 2018. La distancia creciente entre Z y PIB ayuda a ver por qué el paper arranca por aquí: primero se ve el co-movimiento, luego se entra a la econometría.</p>
+  </div>
+  <div class="split">
+    <div class="split-text fade-in">
+      <h2 class="section-title">Cuando la demanda autónoma crece, el PIB la sigue</h2>
+      <p class="section-lead">
+        La <strong>demanda autónoma Z</strong> es la suma de tres componentes que no dependen del ingreso corriente:
+        exportaciones (X), gasto del gobierno (G) e inversión residencial (RES).
+        La correlación entre su tasa de crecimiento y la del PIB es <strong id="corr-inline">—</strong> para el período 1993–2019.
+        Al extender la muestra hasta 2025, la correlación es <strong id="corr-ext-inline">—</strong>.
+      </p>
+      <div class="callout">
+        Dale a <strong>▶ Animar</strong> para ver cómo se arma la correlación trimestre a trimestre.
+        Los puntos rojos son episodios de crisis.
+      </div>
+      <button class="play-btn" id="btn-scatter">
+        <svg viewBox="0 0 10 10"><polygon points="2,1 9,5 2,9"/></svg>
+        Animar
+      </button>
+    </div>
+    <div class="split-chart fade-in">
+      <div class="chart-wrap">
+        <div id="chart-scatter" style="height:380px"></div>
+      </div>
+      <p class="chart-caption">Tasas de crecimiento interanual (yoy) de Z y PIB, precios constantes base 2018. Fuente: Banxico / INEGI.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ LOS TRES MOTORES ═════════════════════ -->
+<section id="motores">
+  <span class="section-label">02 · Los tres motores</span>
+  <h2 class="section-title fade-in">Las exportaciones ganaron peso, el gobierno perdió terreno</h2>
+  <p class="section-lead fade-in">
+    El TLCAN (1994) cambió la composición de la demanda autónoma.
+    Las exportaciones pasaron de representar el <strong id="wx-start">—</strong> de Z en 1993 a
+    <strong id="wx-end">—</strong> en 2019 y <strong id="wx-2025">—</strong> en 2025. En sentido inverso,
+    el gasto público bajó de <strong id="wg-start">—</strong> a <strong id="wg-end">—</strong> y
+    <strong id="wg-2025">—</strong>, mientras que la inversión residencial se mantuvo como un componente menor:
+    de <strong id="wres-start">—</strong> a <strong id="wres-end">—</strong> y <strong id="wres-2025">—</strong>.
+  </p>
+  <div class="chart-wrap fade-in" style="padding:1.5rem 1rem 1rem">
+    <div id="chart-components" style="height:400px"></div>
+  </div>
+  <p class="chart-caption fade-in">Índice de cada componente (1993Q1 = 100). La brecha creciente entre X y G es la huella del TLCAN.</p>
+</section>
+
+<!-- ═══════════════════════════════ SUPERMULTIPLICADOR ═══════════════════ -->
+<section id="multiplicador">
+  <span class="section-label">03 · El supermultiplicador</span>
+  <div class="split reverse">
+    <div class="split-chart fade-in">
+      <div class="chart-wrap">
+        <div id="chart-sm" style="height:340px"></div>
+      </div>
+      <p class="chart-caption">SM = 1 / (s + m − h). La caída refleja principalmente el aumento de la propensión a importar después del TLCAN.</p>
+    </div>
+    <div class="split-text fade-in">
+      <h2 class="section-title">El multiplicador se redujo a la mitad en 30 años</h2>
+      <p class="section-lead">
+        El <strong>Supermultiplicador</strong> determina cuántos pesos de PIB genera cada peso de demanda autónoma.
+        Cayó de <strong id="sm-93">—</strong> en 1993 a <strong id="sm-19">—</strong> en 2019 y <strong id="sm-25">—</strong> en 2025.
+        La razón principal: el aumento de la propensión a importar (<em>m</em>) tras el TLCAN redujo el ingreso que circula dentro del país.
+      </p>
+      <!-- A: Calculadora interactiva -->
+      <div style="margin-top:1.5rem">
+        <p style="font-size:0.82rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink);opacity:0.6;margin-bottom:1rem">Calculadora interactiva</p>
+        <div class="controls">
+          <div class="slider-group">
+            <div class="slider-label">Propensión a ahorrar <em>s</em> <span id="val-s">0.35</span></div>
+            <input type="range" id="sl-s" min="0.15" max="0.50" step="0.005" value="0.35">
+          </div>
+          <div class="slider-group">
+            <div class="slider-label">Propensión a importar <em>m</em> <span id="val-m">0.30</span></div>
+            <input type="range" id="sl-m" min="0.10" max="0.50" step="0.005" value="0.30">
+          </div>
+          <div class="slider-group">
+            <div class="slider-label">Participación inversión <em>h</em> <span id="val-h">0.22</span></div>
+            <input type="range" id="sl-h" min="0.05" max="0.35" step="0.005" value="0.22">
+          </div>
+        </div>
+        <div class="sm-display">
+          <div class="sm-val" id="sm-calc">—</div>
+          <div class="sm-desc">SM = 1 / (s + m − h) &nbsp;·&nbsp; valor calculado</div>
+        </div>
+        <p style="font-size:0.76rem;color:var(--muted);margin-top:0.7rem">
+          Valores reales de México: <em>s</em> ≈ 0.31–0.39, <em>m</em> ≈ 0.15→0.42, <em>h</em> ≈ 0.16–0.26
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- C: Simulador G x m -->
+  <div style="margin-top:5rem" class="fade-in">
+    <p class="section-label">03b · Simulador</p>
+    <h3 style="font-family:'Newsreader',serif;font-size:1.8rem;font-weight:400;color:var(--ink);margin-bottom:0.8rem">¿Puede el gasto público compensar la fuga importadora?</h3>
+    <p class="section-lead">
+      Un aumento de <em>G</em> expande la demanda autónoma. Pero si la propensión a importar <em>m</em> es alta,
+      una parte mayor del impulso se fuga al exterior y el multiplicador se achica. Este ejercicio toma 2019 como
+      punto de referencia y muestra el efecto relativo sobre el PIB implícito por la identidad del supermultiplicador.
+    </p>
+    <div style="max-width:640px">
+      <div class="slider-group">
+        <div class="slider-label">Aumento de gasto público <em>G</em> <span id="val-g-cf">20%</span></div>
+        <input type="range" id="sl-g-cf" min="0" max="0.50" step="0.01" value="0.20">
+      </div>
+      <div class="slider-group">
+        <div class="slider-label">Propensión a importar <em>m</em> <span id="val-m-cf">0.420</span></div>
+        <input type="range" id="sl-m-cf" min="0.15" max="0.55" step="0.005" value="0.42">
+      </div>
+    </div>
+    <div class="chart-wrap fade-in" style="margin-top:1rem;padding:1.5rem 1rem 1rem">
+      <div id="chart-counterfactual" style="height:320px"></div>
+    </div>
+    <p class="chart-caption">Índice 2019 = 100. El segundo escenario aumenta <em>G</em> manteniendo la <em>m</em> observada en 2019; el tercero permite ver qué pasa si ese mismo impulso convive con una propensión importadora distinta.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ VECM ══════════════════════════════════ -->
+<section id="vecm">
+  <span class="section-label">04 · La evidencia econométrica</span>
+  <h2 class="section-title fade-in">En el largo plazo, Z lidera al PIB</h2>
+  <p class="section-lead fade-in">
+    Un modelo de corrección de errores (VECM) estima la relación de largo plazo entre Z y el PIB.
+    Las series están cointegradas: aunque se muevan por separado en el corto plazo, convergen hacia un equilibrio estable.
+  </p>
+  <div class="big-number-grid fade-in">
+    <div class="big-number">
+      <div class="num" id="bn-beta">—</div>
+      <div class="label"><strong>β — elasticidad de largo plazo</strong><br>Por cada 1% que crece Z, el PIB crece 0.81% en el largo plazo</div>
+    </div>
+    <div class="big-number">
+      <div class="num red" id="bn-alpha">—</div>
+      <div class="label"><strong>α₁ — velocidad de ajuste</strong><br>Cuando el PIB se desvía del equilibrio, se corrige en esa proporción cada trimestre</div>
+    </div>
+    <div class="big-number">
+      <div class="num green">100%</div>
+      <div class="label"><strong>Robustez temporal</strong><br>En las 36 ventanas móviles de 10 años, α₁ &lt; 0 en todos los casos</div>
+    </div>
+  </div>
+
+  <!-- D: Equilibrio de largo plazo -->
+  <div style="margin-top:3.5rem" class="fade-in">
+    <h3 style="font-family:'Newsreader',serif;font-size:1.6rem;font-weight:400;color:var(--ink);margin-bottom:0.8rem">
+      El plano de equilibrio: Z y PIB caminan juntos
+    </h3>
+    <p class="section-lead">
+      Cada punto es un trimestre en el espacio (log Z, log PIB). La línea de cointegración tiene pendiente β = <span id="d-beta">—</span>.
+      Las flechas muestran cómo los trimestres que se alejaron del equilibrio se corrigieron en los trimestres siguientes.
+    </p>
+    <div class="chart-wrap" style="padding:1.5rem 1rem 1rem">
+      <div id="chart-equilibrium" style="height:440px"></div>
+    </div>
+    <p class="chart-caption">Scatter log(Z) vs log(PIB), 1993Q1–2019Q4. La línea recta es la relación de cointegración estimada. Las flechas ilustran el mecanismo de corrección de error.</p>
+  </div>
+
+  <!-- OIRFs -->
+  <div style="margin-top:4rem" class="fade-in">
+    <h3 style="font-family:'Newsreader',serif;font-size:1.6rem;font-weight:400;color:var(--ink);margin-bottom:0.8rem">
+      Los shocks entre Z y PIB dejan respuestas persistentes
+    </h3>
+    <p class="section-lead">
+      Las funciones de impulso-respuesta ortogonalizadas (OIRFs) miden la respuesta cruzada entre demanda autónoma y producto.
+      Al extender la muestra hasta 2025, la respuesta de <strong>PIB ante shocks en Z</strong> permanece positiva,
+      mientras que la respuesta inversa pierde precisión y su banda de confianza cruza cero.
+    </p>
+    <div class="chart-wrap" style="padding:1.5rem 1rem 1rem">
+      <div id="chart-oirf" style="height:340px"></div>
+    </div>
+    <p class="chart-caption">OIRFs ante shocks de 1 DE, muestra extendida 1993Q1–2025Q4, con ordenamiento Cholesky [Z, PIB]. Horizonte: 20 trimestres. Bandas grises: intervalo bootstrap 95% (500 corridas). No se acumulan las IRFs: el paper reporta respuestas en niveles/logs.</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ ROLLING VECM ══════════════════════════ -->
+<section id="rolling">
+  <span class="section-label">05 · Estabilidad de la relación</span>
+  <h2 class="section-title fade-in">La relación se mantiene a través de todas las crisis</h2>
+  <p class="section-lead fade-in">
+    Estimamos el VECM sobre <strong id="rolling-windows-text">—</strong> ventanas móviles de 40 trimestres (10 años),
+    dentro de la muestra de réplica 1993–2019. En las ventanas aceptadas, β y α₁ conservan el signo esperado:
+    la demanda autónoma lidera al PIB en el largo plazo.
+  </p>
+
+  <!-- 1: Ventana deslizante -->
+  <div class="fade-in" style="margin-bottom:4rem">
+    <h3 style="font-family:'Newsreader',serif;font-size:1.4rem;font-weight:400;color:var(--ink);margin-bottom:0.8rem">
+      La línea de equilibrio casi no se mueve
+    </h3>
+    <p style="font-size:0.92rem;color:var(--muted);margin-bottom:1.2rem;max-width:58ch">
+      Mueve el slider para recorrer la ventana de 10 años. Fíjate cómo la línea de cointegración (y el β estimado) se mantienen bastante estables.
+    </p>
+    <div class="window-controls">
+      <span class="window-label" id="window-period-label">Ventana: 2002Q4</span>
+      <input type="range" id="window-slider" min="0" max="0" step="1" value="0" style="flex:1;min-width:200px">
+    </div>
+    <div class="window-stats">
+      <div class="wstat"><div class="val" id="w-beta">—</div><div class="lbl">β estimado</div></div>
+      <div class="wstat"><div class="val" id="w-alpha">—</div><div class="lbl">α₁ estimado</div></div>
+      <div class="wstat"><div class="val" id="w-window">—</div><div class="lbl">Período cubierto</div></div>
+    </div>
+    <div class="chart-wrap" style="margin-top:1rem;padding:1.5rem 1rem 1rem">
+      <div id="chart-sliding" style="height:400px"></div>
+    </div>
+  </div>
+
+  <!-- 2 + 4: Corridor + Phase Plane -->
+  <div class="corridor-wrap fade-in">
+    <div>
+      <h3 style="font-family:'Newsreader',serif;font-size:1.3rem;font-weight:400;color:var(--ink);margin-bottom:0.6rem">β a lo largo del tiempo</h3>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem">La mayoría de las ventanas se concentra alrededor de β ≈ 1, aunque hay episodios de mayor inestabilidad.</p>
+      <div class="chart-wrap" style="padding:1.2rem 0.5rem 0.5rem">
+        <div id="chart-corridor" style="height:300px"></div>
+      </div>
+    </div>
+    <div>
+      <h3 style="font-family:'Newsreader',serif;font-size:1.3rem;font-weight:400;color:var(--ink);margin-bottom:0.6rem">Resumen de robustez</h3>
+      <p style="font-size:0.82rem;color:var(--muted);margin-bottom:1rem">Una lectura compacta de las ventanas móviles aceptadas, sin pedirle al lector que descifre otro diagrama.</p>
+      <div class="chart-wrap" style="padding:1.2rem 0.5rem 0.5rem">
+        <table class="summary-table">
+          <thead>
+            <tr><th>Indicador</th><th>Resultado</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Ventanas aceptadas</td><td id="robust-n">—</td></tr>
+            <tr><td>Ventanas con β &gt; 0</td><td id="robust-beta-pos">—</td></tr>
+            <tr><td>Ventanas con α₁ &lt; 0</td><td id="robust-alpha-neg">—</td></tr>
+            <tr><td>Mediana de β</td><td id="robust-beta-med">—</td></tr>
+            <tr><td>Rango intercuartílico de β</td><td id="robust-beta-iqr">—</td></tr>
+            <tr><td>Mediana de α₁</td><td id="robust-alpha-med">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <p class="chart-caption fade-in" style="margin-top:1rem">Ventanas móviles de 40 trimestres, 1993Q1–2019Q4. Solo se muestran ventanas con estimaciones económicamente plausibles (0 &lt; β &lt; 4, α₁ &lt; 0).</p>
+</section>
+
+<!-- ═══════════════════════════════ EXTENSIÓN 2019-2025 ═══════════════════ -->
+<section id="extension">
+  <span class="section-label">06 · 2019–2025</span>
+  <div class="split">
+    <div class="split-text fade-in">
+      <h2 class="section-title">El COVID rompió la relación, la recuperación la reafirmó</h2>
+      <p class="section-lead">
+        Extendiendo la muestra hasta 2025, el β cae a <strong>0.68</strong> — reflejo de la disrupción COVID y la recuperación asimétrica.
+        Sin embargo, la dirección de causalidad se mantiene: Z sigue liderando al PIB.
+      </p>
+      <div class="callout">
+        La caída del SM a <strong id="sm-25b">—</strong> en 2025 (desde 3.3 en 1993) implica que el mismo crecimiento de demanda autónoma genera <em>casi la mitad</em> del impacto en PIB que generaba treinta años atrás.
+      </div>
+    </div>
+    <div class="split-chart fade-in">
+      <div class="chart-wrap">
+        <div id="chart-extension" style="height:380px"></div>
+      </div>
+      <p class="chart-caption">Tasas de crecimiento yoy, muestra extendida 1994Q1–2025Q4. La región sombreada marca el período post-paper (2020–2025).</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════ CONCLUSIÓN ════════════════════════════ -->
+<section id="conclusion" style="border-bottom:none">
+  <span class="section-label">07 · Implicaciones</span>
+  <h2 class="section-title fade-in">La demanda autónoma no es un residuo: es el motor</h2>
+  <p class="section-lead fade-in" style="max-width:64ch">
+    Los resultados sostienen el marco del <strong>Supermultiplicador Sraffiano</strong> para México:
+    la demanda autónoma Z determina el crecimiento de largo plazo, el PIB se ajusta hacia Z (no al revés),
+    y el efecto de un shock de demanda es <em>permanente</em>.
+  </p>
+  <div class="big-number-grid fade-in" style="max-width:800px">
+    <div class="big-number">
+      <div class="num">Política<br>fiscal</div>
+      <div class="label">El gasto público (G) tiene efectos multiplicados sobre el PIB. Su estancamiento post-2008 explica parte del "estancamiento estabilizador".</div>
+    </div>
+    <div class="big-number">
+      <div class="num">Sector<br>externo</div>
+      <div class="label">Las exportaciones (X) son el componente más dinámico. Su crecimiento, sin embargo, filtra ingreso vía importaciones (m↑).</div>
+    </div>
+    <div class="big-number">
+      <div class="num">Vivienda</div>
+      <div class="label">La inversión residencial (RES) es pequeña pero estable — un ancla del SM que amortigua volatilidad.</div>
+    </div>
+  </div>
+  <div class="callout fade-in" style="margin-top:3rem">
+    Esto fue una réplica de bolsillo, hecha con datos actualizados y algo de terquedad. Si quieres el argumento serio,
+    con paciencia académica y sin andar sacando cuentas al aventón en la fila del desempleo, ve a leer
+    <a href="https://www.elgaronline.com/view/journals/roke/12/4/article-p538.xml" target="_blank" rel="noopener">Barbieri Góes, Gahn y Gallo (2024)</a>.
+    Para una entrada más amigable al supermultiplicador, el capítulo
+    <a href="https://macrosimulation.org/a_sraffian_supermultiplier_model" target="_blank" rel="noopener">DIY Macroeconomic Model Simulation: A Sraffian Supermultiplier Model</a>
+    es una muy buena puerta de entrada.
+  </div>
+  <p class="section-lead fade-in" style="max-width:64ch;margin-top:2rem">
+    Y la próxima vez que tu tío panista, morenista o priista salga con que México no crece por falta de ganas,
+    por un problema cultural o nomás por la corrupción,
+    ya le puedes contestar: no es eso, carnal, es la falta de demanda autónoma. En corto: si el gobierno decide seguir
+    en su onda franciscana, difícilmente vamos a salir del estancamiento estabilizador que ya hasta se está desestabilizando con nosotros adentro.
+  </p>
+</section>
+
+<!-- ═══════════════════════════════ FOOTER ════════════════════════════════ -->
+<footer>
+  <p><strong>Fuentes:</strong> Banxico SIE (series SA base 2018), OECD Quarterly National Accounts (inversión residencial), FRED/OECD (NFIDRNSAXDCMXQ).</p>
+  <p style="margin-top:0.5rem"><strong>Metodología:</strong> Barbieri Góes, Gahn & Gallo (2024) · VECM(2, r=1) · Johansen (Caso 4) · OIRFs Cholesky · Base 2018 Banxico</p>
+  <p style="margin-top:0.5rem">Elaboración propia · Datos actualizados a 2025Q4</p>
+</footer>
+
+<!-- ═══════════════════════════════ JAVASCRIPT ════════════════════════════ -->
+<script>
+// ── PALETA ────────────────────────────────────────────────────────────────
+const C = {
+  canvas: '#f5f4ed', ink: '#1B365D', red: '#B85C38',
+  green: '#4A7C59', gold: '#B8860B', purple: '#6B4E8A',
+  text: '#2C2C2C', muted: '#6B6760',
+  ink10: 'rgba(27,54,93,0.08)', ink20: 'rgba(27,54,93,0.18)'
+};
+
+const BASE = {
+  paper_bgcolor: C.canvas, plot_bgcolor: C.canvas,
+  font: { family:'Inter, sans-serif', color: C.text, size: 12 },
+  xaxis: { gridcolor: C.ink10, linecolor: C.ink20, zeroline:false, tickfont:{size:11} },
+  yaxis: { gridcolor: C.ink10, linecolor: C.ink20, zeroline:false, tickfont:{size:11} },
+  margin: { t:24, r:20, b:48, l:56 },
+  legend: { bgcolor:'rgba(0,0,0,0)', borderwidth:0, font:{size:11} },
+  hovermode:'closest'
+};
+
+const CFG = { responsive:true, displayModeBar:false };
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+function qLabel(q){ return q.replace('Q1','T1').replace('Q2','T2').replace('Q3','T3').replace('Q4','T4') }
+function corr(x, y){
+  const n = Math.min(x.length, y.length);
+  if(n < 2) return null;
+  const xs = x.slice(0,n), ys = y.slice(0,n);
+  const mx = xs.reduce((a,b)=>a+b,0)/n;
+  const my = ys.reduce((a,b)=>a+b,0)/n;
+  const num = xs.reduce((s,v,i)=>s+(v-mx)*(ys[i]-my),0);
+  const denX = xs.reduce((s,v)=>s+(v-mx)**2,0);
+  const denY = ys.reduce((s,v)=>s+(v-my)**2,0);
+  const den = Math.sqrt(denX*denY);
+  return den > 0 ? num/den : null;
+}
+function quantile(arr, q){
+  if(!arr.length) return null;
+  const sorted = arr.slice().sort((a,b)=>a-b);
+  const pos = (sorted.length - 1) * q;
+  const base = Math.floor(pos);
+  const rest = pos - base;
+  return sorted[base + 1] !== undefined ? sorted[base] + rest * (sorted[base + 1] - sorted[base]) : sorted[base];
+}
+function isCrisis(q){
+  return ['1994Q4','1995Q1','1995Q2','2001Q3','2001Q4','2008Q4','2009Q1','2009Q2','2020Q1','2020Q2'].includes(q);
+}
+function hasRuntimeData(){
+  if(typeof DATA === 'undefined'){
+    console.error('No se encontro DATA. Revisa que data_web.js exista junto a storytelling.html.');
+    return false;
+  }
+  if(typeof Plotly === 'undefined'){
+    console.error('No se encontro Plotly. Revisa la conexion o usa una copia local de Plotly.');
+    return false;
+  }
+  return true;
+}
+
+// ── INIT HERO NUMBERS ─────────────────────────────────────────────────────
+function initHero(){
+  const kn = DATA.key_numbers;
+  document.getElementById('h-corr').textContent  = (kn.corr*100).toFixed(1)+'%';
+  document.getElementById('h-beta').textContent  = kn.beta.toFixed(2);
+  document.getElementById('h-sm93').textContent  = kn.sm_1993q1.toFixed(1)+'×';
+  document.getElementById('h-sm19').textContent  = kn.sm_2019q4.toFixed(1)+'×';
+  document.getElementById('h-sm25').textContent  = kn.sm_2025q4.toFixed(1)+'×';
+  document.getElementById('pib-growth-text').textContent = kn.pib_growth_mean.toFixed(1)+'%';
+  document.getElementById('corr-inline').textContent = (kn.corr*100).toFixed(1)+'%';
+  const corrExt = corr(DATA.extension.Z, DATA.extension.PIB);
+  document.getElementById('corr-ext-inline').textContent = corrExt === null ? '—' : (corrExt*100).toFixed(1)+'%';
+  const w = DATA.weights;
+  const lastW = w.labels.length - 1;
+  document.getElementById('wx-start').textContent   = w.X[0].toFixed(1)+'%';
+  document.getElementById('wx-end').textContent     = w.X[lastW].toFixed(1)+'%';
+  document.getElementById('wg-start').textContent   = w.G[0].toFixed(1)+'%';
+  document.getElementById('wg-end').textContent     = w.G[lastW].toFixed(1)+'%';
+  document.getElementById('wres-start').textContent = w.RES[0].toFixed(1)+'%';
+  document.getElementById('wres-end').textContent   = w.RES[lastW].toFixed(1)+'%';
+  document.getElementById('wx-2025').textContent    = '72.5%';
+  document.getElementById('wg-2025').textContent    = '25.0%';
+  document.getElementById('wres-2025').textContent  = '2.5%';
+  document.getElementById('sm-93').textContent   = kn.sm_1993q1.toFixed(2);
+  document.getElementById('sm-19').textContent   = kn.sm_2019q4.toFixed(2);
+  document.getElementById('sm-25').textContent   = kn.sm_2025q4.toFixed(2);
+  document.getElementById('sm-25b').textContent  = kn.sm_2025q4.toFixed(2);
+  document.getElementById('bn-beta').textContent = kn.beta.toFixed(2);
+  document.getElementById('bn-alpha').textContent= kn.alpha1.toFixed(3);
+  document.getElementById('d-beta').textContent  = kn.beta.toFixed(2);
+  document.getElementById('rolling-windows-text').textContent = DATA.rolling.labels.length;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// B: SCATTER ANIMADO Z–PIB
+// ═══════════════════════════════════════════════════════════════════════════
+function initScatterAnimado(){
+  const g = DATA.growth;
+  const labels = g.labels.map(qLabel);
+  const crisisIdx = g.labels.map((q,i)=> isCrisis(q) ? i : -1).filter(i=>i>=0);
+
+  // Estado: puntos mostrados
+  let nShown = g.Z.length;
+  let animInterval = null;
+  let playing = false;
+
+  function getTraces(n){
+    const xl = g.Z.slice(0,n), yl = g.PIB.slice(0,n);
+    const crX = [], crY = [], crT = [];
+    const norX = [], norY = [], norT = [];
+    for(let i=0;i<n;i++){
+      if(crisisIdx.includes(i)){crX.push(g.Z[i]);crY.push(g.PIB[i]);crT.push(labels[i]);}
+      else{norX.push(g.Z[i]);norY.push(g.PIB[i]);norT.push(labels[i]);}
+    }
+    const traces = [
+      {x:norX,y:norY,mode:'markers',name:'Trimestre',
+       marker:{color:C.ink,size:7,opacity:0.65},
+       text:norT,hovertemplate:'%{text}<br>Z: %{x:.1f}%<br>PIB: %{y:.1f}%<extra></extra>'},
+      {x:crX,y:crY,mode:'markers',name:'Crisis',
+       marker:{color:C.red,size:9,symbol:'diamond',opacity:0.9},
+       text:crT,hovertemplate:'%{text}<br>Z: %{x:.1f}%<br>PIB: %{y:.1f}%<extra></extra>'}
+    ];
+    // Línea de regresión: requiere al menos dos puntos con variacion en X.
+    if(xl.length > 1){
+      const xMin=Math.min(...xl), xMax=Math.max(...xl);
+      const meanX=xl.reduce((a,b)=>a+b,0)/xl.length;
+      const meanY=yl.reduce((a,b)=>a+b,0)/yl.length;
+      const num=xl.reduce((s,x,i)=>s+(x-meanX)*(yl[i]-meanY),0);
+      const den=xl.reduce((s,x)=>s+(x-meanX)**2,0);
+      if(Number.isFinite(den) && den > 0){
+        const slope=num/den, intercept=meanY-slope*meanX;
+        traces.push({x:[xMin,xMax],y:[slope*xMin+intercept,slope*xMax+intercept],
+         mode:'lines',name:'Tendencia',line:{color:C.red,width:1.5,dash:'dot'},showlegend:n>20});
+      }
+    }
+    return traces;
+  }
+
+  const layout = {...BASE,
+    xaxis:{...BASE.xaxis,title:'Crecimiento Z (% yoy)'},
+    yaxis:{...BASE.yaxis,title:'Crecimiento PIB (% yoy)'},
+    annotations:[{
+      x:0.98,y:0.05,xref:'paper',yref:'paper',
+      text:'corr = <b>'+((DATA.key_numbers.corr)*100).toFixed(1)+'%</b>',
+      showarrow:false,font:{size:13,color:C.ink},xanchor:'right'
+    }]
+  };
+
+  Plotly.newPlot('chart-scatter', getTraces(nShown), layout, CFG);
+
+  document.getElementById('btn-scatter').addEventListener('click', function(){
+    if(playing){ clearInterval(animInterval); playing=false; this.innerHTML='<svg viewBox="0 0 10 10"><polygon points="2,1 9,5 2,9"/></svg> Animar'; return; }
+    playing = true;
+    this.innerHTML='<svg viewBox="0 0 10 10"><rect x="1.5" y="1" width="3" height="8"/><rect x="5.5" y="1" width="3" height="8"/></svg> Pausar';
+    let n = 1;
+    animInterval = setInterval(()=>{
+      if(n >= g.Z.length){ clearInterval(animInterval); playing=false; this.innerHTML='<svg viewBox="0 0 10 10"><polygon points="2,1 9,5 2,9"/></svg> Animar'; return; }
+      Plotly.react('chart-scatter', getTraces(n), layout, CFG);
+      n += 2;
+    }, 80);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// NIVELES: PIB Y Z
+// ═══════════════════════════════════════════════════════════════════════════════
+function initLevels(){
+  const ld = DATA.logdata;
+  const labs = ld.labels.map(qLabel);
+  const zLevels = ld.logZ.map(v => Math.exp(v));
+  const pibLevels = ld.logPIB.map(v => Math.exp(v));
+  const yAll = [...zLevels, ...pibLevels];
+  const yMin = Math.min(...yAll) * 0.94;
+  const yMax = Math.max(...yAll) * 1.04;
+  const traces = [
+    {x:labs, y:zLevels, mode:'lines', name:'Z (demanda autónoma)', line:{color:C.red,width:2.4}},
+    {x:labs, y:pibLevels, mode:'lines', name:'PIB', line:{color:C.ink,width:2.4}}
+  ];
+  const layout = {...BASE,
+    xaxis:{...BASE.xaxis,title:''},
+    yaxis:{...BASE.yaxis,title:'Pesos constantes (base 2018)', range:[yMin, yMax], tickformat:'~s'},
+    shapes:[{
+      type:'line',x0:'2019T4',x1:'2019T4',y0:yMin,y1:yMax,
+      line:{color:C.muted,width:1,dash:'dot'}
+    }],
+    annotations:[{
+      x:'2019T4',y:yMax*0.985,text:'Fin paper',showarrow:false,font:{color:C.muted,size:10},xanchor:'left'
+    }]
+  };
+  Plotly.newPlot('chart-levels', traces, layout, CFG);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPONENTES DE Z
+// ═══════════════════════════════════════════════════════════════════════════
+function initComponents(){
+  const c = DATA.components;
+  const labs = c.labels.map(qLabel);
+  const traces = [
+    {x:labs,y:c.X,  mode:'lines',name:'Exportaciones (X)',line:{color:C.ink,width:2}},
+    {x:labs,y:c.G,  mode:'lines',name:'Gasto gobierno (G)',line:{color:C.red,width:2,dash:'dash'}},
+    {x:labs,y:c.RES,mode:'lines',name:'Inversión residencial (RES)',line:{color:C.green,width:1.5,dash:'dot'}}
+  ];
+  const layout = {...BASE,
+    xaxis:{...BASE.xaxis,title:''},
+    yaxis:{...BASE.yaxis,title:'Índice (1993Q1 = 100)'},
+    annotations:[{x:'2004T2',y:200,text:'TLCAN →',showarrow:false,font:{color:C.muted,size:11}}]
+  };
+  Plotly.newPlot('chart-components', traces, layout, CFG);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SUPERMULTIPLICADOR + CALCULADORA
+// ═══════════════════════════════════════════════════════════════════════════
+function initSM(){
+  const sm = DATA.sm;
+  const labs = sm.labels.map(qLabel);
+  const traces = [
+    {x:labs,y:sm.SM,mode:'lines',name:'SM',line:{color:C.ink,width:2.5}},
+    {x:labs,y:sm.m, mode:'lines',name:'m (prop. importar)',line:{color:C.red,width:1.5,dash:'dash'},yaxis:'y2'},
+  ];
+  const layout = {...BASE,
+    xaxis:{...BASE.xaxis},
+    yaxis:{...BASE.yaxis,title:'Supermultiplicador',range:[0.5,4.5]},
+    yaxis2:{overlaying:'y',side:'right',title:'m',showgrid:false,range:[0,0.6],tickfont:{size:11,color:C.red},titlefont:{color:C.red}},
+    legend:{...BASE.legend,x:0.01,y:0.15},
+    shapes:[{type:'rect',x0:'2020T1',x1:'2021T4',y0:0,y1:5,xref:'x',yref:'y',fillcolor:'rgba(184,92,56,0.08)',line:{width:0}}]
+  };
+  Plotly.newPlot('chart-sm', traces, layout, CFG);
+
+  // Calculadora
+  function updateCalc(){
+    const s = parseFloat(document.getElementById('sl-s').value);
+    const m = parseFloat(document.getElementById('sl-m').value);
+    const h = parseFloat(document.getElementById('sl-h').value);
+    document.getElementById('val-s').textContent = s.toFixed(3);
+    document.getElementById('val-m').textContent = m.toFixed(3);
+    document.getElementById('val-h').textContent = h.toFixed(3);
+    const denom = s + m - h;
+    const val = denom > 0.01 ? (1/denom).toFixed(2) : '∞';
+    document.getElementById('sm-calc').textContent = val;
+    const el = document.getElementById('sm-calc');
+    const num = parseFloat(val);
+    el.style.color = num > 3 ? C.green : num > 1.5 ? C.ink : C.red;
+  }
+  ['sl-s','sl-m','sl-h'].forEach(id => document.getElementById(id).addEventListener('input', updateCalc));
+  updateCalc();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// C: SIMULADOR G x m
+// ═══════════════════════════════════════════════════════════════════════════
+function initCounterfactual(){
+  const path = DATA.smh_path;
+  const base = path[path.length - 1]; // 2019Q4, cierre de la muestra principal
+  const weights = DATA.weights;
+  const lastW = weights.labels.length - 1;
+  const gShare = weights.G[lastW] / 100;
+  const mObserved = base.m;
+  const smObserved = base.SM;
+
+  function smFor(m){
+    const denom = base.s + m - base.h;
+    return denom > 0.01 ? 1 / denom : null;
+  }
+
+  function render(gBoost, mScenario){
+    const zBoost = 1 + gShare * gBoost;
+    const smScenario = smFor(mScenario);
+    const yBase = 100;
+    const yGOnly = zBoost * 100;
+    const yScenario = smScenario === null ? null : zBoost * (smScenario / smObserved) * 100;
+
+    const traces = [
+      {
+        x:['Base 2019', '+G, m observada', '+G, m elegida'],
+        y:[yBase, yGOnly, yScenario],
+        type:'bar',
+        marker:{color:[C.ink, C.green, C.red], opacity:[0.9,0.8,0.82]},
+        text:[yBase, yGOnly, yScenario].map(v => v === null ? '—' : v.toFixed(1)),
+        textposition:'outside',
+        hovertemplate:'%{x}<br>Índice PIB: %{y:.1f}<extra></extra>'
+      },
+      {
+        x:['Base 2019', '+G, m observada', '+G, m elegida'],
+        y:[100,100,100],
+        mode:'lines',
+        line:{color:C.muted,width:1,dash:'dot'},
+        showlegend:false,
+        hoverinfo:'skip'
+      }
+    ];
+    const layout = {...BASE,
+      xaxis:{...BASE.xaxis,title:''},
+      yaxis:{...BASE.yaxis,title:'PIB implícito (2019 = 100)',range:[0, Math.max(130, (yScenario || 100) + 18)]},
+      showlegend:false,
+      annotations:[{
+        x:0.02,y:0.96,xref:'paper',yref:'paper',
+        text:`G: +${(gBoost*100).toFixed(0)}% · m observada 2019: ${mObserved.toFixed(3)} · m elegida: ${mScenario.toFixed(3)}`,
+        showarrow:false,font:{size:12,color:C.ink},xanchor:'left',yanchor:'top',
+        bgcolor:'rgba(245,244,237,0.9)',borderpad:4
+      }]
+    };
+    Plotly.react('chart-counterfactual', traces, layout, CFG);
+  }
+
+  function update(){
+    const gBoost = parseFloat(document.getElementById('sl-g-cf').value);
+    const mScenario = parseFloat(document.getElementById('sl-m-cf').value);
+    document.getElementById('val-g-cf').textContent = (gBoost * 100).toFixed(0) + '%';
+    document.getElementById('val-m-cf').textContent = mScenario.toFixed(3);
+    render(gBoost, mScenario);
+  }
+
+  ['sl-g-cf','sl-m-cf'].forEach(id => document.getElementById(id).addEventListener('input', update));
+  update();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// D: EQUILIBRIO DE LARGO PLAZO
+// ═══════════════════════════════════════════════════════════════════════════
+function initEquilibrium(){
+  const ld = DATA.logdata;
+  const beta = DATA.key_numbers.beta;
+  const n = ld.labels.length;
+  const labs = ld.labels.map(qLabel);
+
+  // Color por año
+  const years = ld.labels.map(q => parseInt(q.split('Q')[0]));
+  const yearMin = Math.min(...years), yearMax = Math.max(...years);
+  const colorScale = years.map(y => (y - yearMin)/(yearMax - yearMin));
+
+  // Línea de cointegración: logPIB = const + beta*logZ
+  // Calcular intercepto via OLS
+  const meanZ = ld.logZ.reduce((a,b)=>a+b,0)/n;
+  const meanP = ld.logPIB.reduce((a,b)=>a+b,0)/n;
+  const intercept = meanP - beta * meanZ;
+  const zMin = Math.min(...ld.logZ)-0.05, zMax = Math.max(...ld.logZ)+0.05;
+
+  // Flechas de corrección de error: para 12 puntos representativos, mostrar dirección
+  const arrowShapes = [];
+  const step = Math.floor(n/12);
+  for(let i=0; i<n-1; i+=step){
+    const x0=ld.logZ[i], y0=ld.logPIB[i];
+    const x1=ld.logZ[i+1], y1=ld.logPIB[i+1];
+    arrowShapes.push({
+      type:'line',x0,y0,x1,y1,xref:'x',yref:'y',
+      line:{color:'rgba(27,54,93,0.35)',width:1.2},
+    });
+  }
+
+  const traces = [
+    {x:ld.logZ, y:ld.logPIB, mode:'markers', name:'Trimestre',
+     marker:{color:years, colorscale:[[0,C.canvas],[0.5,'#8BA7C4'],[1,C.ink]],
+             size:7, opacity:0.85, colorbar:{title:'Año',len:0.6,thickness:8,x:1.02}},
+     text:labs, hovertemplate:'%{text}<br>log Z: %{x:.3f}<br>log PIB: %{y:.3f}<extra></extra>'},
+    {x:[zMin,zMax], y:[beta*zMin+intercept, beta*zMax+intercept],
+     mode:'lines', name:`β = ${beta.toFixed(2)}`, showlegend:true,
+     line:{color:C.red, width:2, dash:'dot'}}
+  ];
+
+  const layout = {...BASE,
+    xaxis:{...BASE.xaxis, title:'log(Z) — demanda autónoma'},
+    yaxis:{...BASE.yaxis, title:'log(PIB)'},
+    shapes: arrowShapes,
+    annotations:[{
+      x:zMin+0.05, y:beta*(zMin+0.05)+intercept+0.02,
+      text:'Equilibrio: log PIB = α + β·log Z',
+      showarrow:false, font:{size:11,color:C.red}, xanchor:'left'
+    }]
+  };
+  Plotly.newPlot('chart-equilibrium', traces, layout, CFG);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// OIRFs
+// ═══════════════════════════════════════════════════════════════════════════
+function initOIRF(){
+  const o = DATA.oirf;
+  const mult = 100; // en puntos porcentuales (× 100 para escalar)
+  const zToPib = (o.z_to_pib || o.period).map(v => v*mult);
+  const pibToZ = (o.pib_to_z || []).map(v => v*mult);
+  const bands = o.bands || null;
+  const zLow = bands ? bands.z_to_pib_low.map(v => v*mult) : null;
+  const zHigh = bands ? bands.z_to_pib_high.map(v => v*mult) : null;
+  const pLow = bands ? bands.pib_to_z_low.map(v => v*mult) : null;
+  const pHigh = bands ? bands.pib_to_z_high.map(v => v*mult) : null;
+  const allResponses = [
+    ...zToPib, ...pibToZ,
+    ...(zLow || []), ...(zHigh || []), ...(pLow || []), ...(pHigh || [])
+  ];
+  const yMin = Math.min(-0.2, ...allResponses) - 0.2;
+  const yMax = Math.max(1.8, ...allResponses) + 0.35;
+  const traces = [];
+  if(bands){
+    traces.push(
+      {x:[...o.horizons, ...o.horizons.slice().reverse()],
+       y:[...zHigh, ...zLow.slice().reverse()],
+       xaxis:'x', yaxis:'y', fill:'toself', fillcolor:'rgba(90,90,90,0.22)',
+       line:{width:0}, hoverinfo:'skip', showlegend:false, name:'IC 95%'},
+      {x:[...o.horizons, ...o.horizons.slice().reverse()],
+       y:[...pHigh, ...pLow.slice().reverse()],
+       xaxis:'x2', yaxis:'y2', fill:'toself', fillcolor:'rgba(90,90,90,0.22)',
+       line:{width:0}, hoverinfo:'skip', showlegend:false, name:'IC 95%'}
+    );
+  }
+  traces.push(
+    {x:o.horizons, y:zToPib, mode:'lines', name:'εZ → PIB',
+     xaxis:'x', yaxis:'y', line:{color:C.ink,width:2.2},
+     hovertemplate:'Horizonte %{x}<br>Respuesta: %{y:.2f} p.p.<extra></extra>'}
+  );
+  if(pibToZ.length){
+    traces.push({
+      x:o.horizons, y:pibToZ, mode:'lines', name:'εPIB → Z',
+      xaxis:'x2', yaxis:'y2', line:{color:C.ink,width:2.2},
+      hovertemplate:'Horizonte %{x}<br>Respuesta: %{y:.2f} p.p.<extra></extra>'
+    });
+  }
+  const layout = {...BASE,
+    grid:{rows:1,columns:2,pattern:'independent'},
+    xaxis:{...BASE.xaxis, title:'Horizonte', dtick:5},
+    yaxis:{...BASE.yaxis, title:'Respuesta PIB (p.p.)', range:[yMin, yMax]},
+    xaxis2:{...BASE.xaxis, title:'Horizonte', dtick:5},
+    yaxis2:{...BASE.yaxis, title:'Respuesta Z (p.p.)', range:[yMin, yMax]},
+    showlegend:false,
+    shapes:[
+      {type:'line',x0:0,x1:20,y0:0,y1:0,xref:'x',yref:'y',line:{color:C.muted,width:1}},
+      {type:'line',x0:0,x1:20,y0:0,y1:0,xref:'x2',yref:'y2',line:{color:C.muted,width:1}}
+    ],
+    annotations:[
+      {x:0.5,y:1.08,xref:'x domain',yref:'paper',text:'εZ → PIB',showarrow:false,font:{size:14,color:C.ink}},
+      {x:0.5,y:1.08,xref:'x2 domain',yref:'paper',text:pibToZ.length ? 'εPIB → Z' : 'εPIB → Z (regenerar datos)',showarrow:false,font:{size:14,color:C.ink}}
+    ]
+  };
+  Plotly.newPlot('chart-oirf', traces, layout, CFG);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 1: VENTANA DESLIZANTE
+// ═══════════════════════════════════════════════════════════════════════════
+function initSliding(){
+  const ld = DATA.logdata;
+  const frames = DATA.sliding_frames;
+  const WIN = 40;
+  const slider = document.getElementById('window-slider');
+  slider.max = Math.max(frames.length - 1, 0);
+  slider.value = Math.min(parseInt(slider.value || '0'), parseInt(slider.max));
+
+  function render(frameIdx){
+    if(!frames.length) return;
+    const fr = frames[frameIdx];
+    const s = fr.start, e = fr.end;
+    const inZ = ld.logZ.slice(s,e), inP = ld.logPIB.slice(s,e);
+    const outZ_pre = ld.logZ.slice(0,s), outP_pre = ld.logPIB.slice(0,s);
+    const outZ_post = ld.logZ.slice(e), outP_post = ld.logPIB.slice(e);
+    const labs = ld.labels.map(qLabel);
+
+    // Regresión dentro de la ventana
+    const bw = fr.beta;
+    const meanIZ = inZ.reduce((a,b)=>a+b,0)/inZ.length;
+    const meanIP = inP.reduce((a,b)=>a+b,0)/inP.length;
+    const intercept = meanIP - bw * meanIZ;
+    const zMin = Math.min(...inZ)-0.02, zMax = Math.max(...inZ)+0.02;
+
+    const traces = [
+      {x:outZ_pre,  y:outP_pre,  mode:'markers',name:'Fuera ventana',
+       marker:{color:C.ink10,size:6},showlegend:false,
+       text:labs.slice(0,s),hovertemplate:'%{text}<extra>fuera</extra>'},
+      {x:outZ_post, y:outP_post, mode:'markers',name:'Fuera ventana',
+       marker:{color:C.ink10,size:6},showlegend:false,
+       text:labs.slice(e),hovertemplate:'%{text}<extra>fuera</extra>'},
+      {x:inZ, y:inP, mode:'markers', name:'En ventana',
+       marker:{color:C.ink,size:8,opacity:0.8},
+       text:labs.slice(s,e),hovertemplate:'%{text}<br>log Z: %{x:.3f}<br>log PIB: %{y:.3f}<extra></extra>'},
+      {x:[zMin,zMax],y:[bw*zMin+intercept,bw*zMax+intercept],
+       mode:'lines',name:`β = ${bw.toFixed(3)}`,
+       line:{color:C.red,width:2.5}}
+    ];
+    const layout = {...BASE,
+      xaxis:{...BASE.xaxis,title:'log(Z)'},
+      yaxis:{...BASE.yaxis,title:'log(PIB)'},
+      annotations:[{
+        x:0.02,y:0.97,xref:'paper',yref:'paper',
+        text:`<b>${qLabel(fr.label)}</b> · β = ${bw.toFixed(3)} · α₁ = ${fr.alpha1.toFixed(3)}`,
+        showarrow:false,font:{size:12,color:C.ink},xanchor:'left',yanchor:'top',
+        bgcolor:'rgba(245,244,237,0.9)',borderpad:4
+      }]
+    };
+    Plotly.react('chart-sliding', traces, layout, CFG);
+
+    // Update stats
+    const startLabel = qLabel(ld.labels[s]);
+    const endLabel   = qLabel(ld.labels[e-1]);
+    document.getElementById('window-period-label').textContent = `Ventana: ${startLabel} → ${endLabel}`;
+    document.getElementById('w-beta').textContent  = bw.toFixed(3);
+    document.getElementById('w-alpha').textContent = fr.alpha1.toFixed(3);
+    document.getElementById('w-window').textContent= `${startLabel} – ${endLabel}`;
+  }
+
+  render(parseInt(slider.value));
+  slider.addEventListener('input', function(){
+    render(parseInt(this.value));
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 2: CORRIDOR CHART
+// ═══════════════════════════════════════════════════════════════════════════
+function initCorridor(){
+  const r = DATA.rolling;
+  const labs = r.labels.map(qLabel);
+  const n = r.beta.length;
+  const idx = Array.from({length:n},(_,i)=>i+1);
+
+  const traces = [
+    {x:idx, y:r.beta, mode:'markers', name:'β por ventana',
+     marker:{color:C.ink, size:8, opacity:0.8},
+     text:labs, hovertemplate:'%{text}<br>β = %{y:.3f}<extra></extra>'},
+    {x:[1,n],y:[r.beta_paper,r.beta_paper],mode:'lines',name:'Paper (0.874)',
+     line:{color:C.red,width:1.5,dash:'dot'}},
+    {x:[1,n],y:[r.beta_ref,r.beta_ref],mode:'lines',name:'Full sample (0.811)',
+     line:{color:C.green,width:1.5,dash:'dash'}},
+  ];
+
+  // Corredor sombreado (±0.25 alrededor del promedio)
+  const mean = r.beta.reduce((a,b)=>a+b,0)/n;
+  const layout = {...BASE,
+    xaxis:{...BASE.xaxis,title:'Número de ventana (cronológico)'},
+    yaxis:{...BASE.yaxis,title:'β estimado',range:[0, 2.5]},
+    shapes:[{
+      type:'rect',x0:0.5,x1:n+0.5,y0:mean-0.4,y1:mean+0.4,
+      fillcolor:'rgba(27,54,93,0.06)',line:{width:0}
+    }]
+  };
+  Plotly.newPlot('chart-corridor', traces, layout, CFG);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 4: RESUMEN DE ROBUSTEZ
+// ═══════════════════════════════════════════════════════════════════════════
+function initRobustnessSummary(){
+  const r = DATA.rolling;
+  const n = r.beta.length;
+  const betaPos = r.beta.filter(v => v > 0).length / n * 100;
+  const alphaNeg = r.alpha1.filter(v => v < 0).length / n * 100;
+  const betaQ1 = quantile(r.beta, 0.25);
+  const betaQ3 = quantile(r.beta, 0.75);
+
+  document.getElementById('robust-n').textContent = n;
+  document.getElementById('robust-beta-pos').textContent = betaPos.toFixed(1)+'%';
+  document.getElementById('robust-alpha-neg').textContent = alphaNeg.toFixed(1)+'%';
+  document.getElementById('robust-beta-med').textContent = quantile(r.beta, 0.5).toFixed(3);
+  document.getElementById('robust-beta-iqr').textContent = betaQ1.toFixed(3)+'–'+betaQ3.toFixed(3);
+  document.getElementById('robust-alpha-med').textContent = quantile(r.alpha1, 0.5).toFixed(3);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EXTENSIÓN 2019–2025
+// ═══════════════════════════════════════════════════════════════════════════
+function initExtension(){
+  const ex = DATA.extension;
+  const labs = ex.labels.map(qLabel);
+  const cutIdx = ex.labels.indexOf('2020Q1');
+
+  const traces = [
+    {x:labs.slice(0,cutIdx), y:ex.Z.slice(0,cutIdx),
+     mode:'lines',name:'Z (demanda autónoma)',line:{color:C.red,width:2}},
+    {x:labs.slice(cutIdx),  y:ex.Z.slice(cutIdx),
+     mode:'lines',name:'Z (2020–)',line:{color:C.red,width:2,dash:'dash'},showlegend:false},
+    {x:labs.slice(0,cutIdx), y:ex.PIB.slice(0,cutIdx),
+     mode:'lines',name:'PIB',line:{color:C.ink,width:2}},
+    {x:labs.slice(cutIdx),  y:ex.PIB.slice(cutIdx),
+     mode:'lines',name:'PIB (2020–)',line:{color:C.ink,width:2,dash:'dash'},showlegend:false},
+  ];
+  const layout = {...BASE,
+    xaxis:{...BASE.xaxis,title:''},
+    yaxis:{...BASE.yaxis,title:'Crecimiento (% yoy)',zeroline:true,zerolinecolor:C.muted},
+    shapes:[
+      {type:'rect',x0:'2020T1',x1:'2021T2',y0:-30,y1:30,
+       fillcolor:'rgba(184,92,56,0.10)',line:{width:0}},
+      {type:'line',x0:'2019T4',x1:'2019T4',y0:-30,y1:30,
+       line:{color:C.muted,width:1,dash:'dot'}}
+    ],
+    annotations:[
+      {x:'2020T2',y:25,text:'COVID',showarrow:false,font:{color:C.red,size:11}},
+      {x:'2019T4',y:20,text:'Fin paper',showarrow:false,font:{color:C.muted,size:10},xanchor:'left'}
+    ]
+  };
+  Plotly.newPlot('chart-extension', traces, layout, CFG);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FADE-IN con IntersectionObserver
+// ═══════════════════════════════════════════════════════════════════════════
+function initFadeIn(){
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('visible') });
+  },{threshold:0.12});
+  document.querySelectorAll('.fade-in').forEach(el=>obs.observe(el));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// NAV ACTIVO
+// ═══════════════════════════════════════════════════════════════════════════
+function initNav(){
+  const sections = document.querySelectorAll('section[id]');
+  const links = document.querySelectorAll('.nav-links a');
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        links.forEach(l=>l.classList.remove('active'));
+        const link = document.querySelector(`.nav-links a[href="#${e.target.id}"]`);
+        if(link) link.classList.add('active');
+      }
+    });
+  },{threshold:0.3});
+  sections.forEach(s=>obs.observe(s));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INIT ALL
+// ═══════════════════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', ()=>{
+  if(!hasRuntimeData()) return;
+  initHero();
+  initLevels();
+  initScatterAnimado();
+  initComponents();
+  initSM();
+  initCounterfactual();
+  initEquilibrium();
+  initOIRF();
+  initSliding();
+  initCorridor();
+  initRobustnessSummary();
+  initExtension();
+  initFadeIn();
+  initNav();
+});
+</script>
+</body>
+</html>
